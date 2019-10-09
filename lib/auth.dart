@@ -27,6 +27,7 @@ class Auth {
       'uid': uid,
       'userName': userName,
       'email': email,
+      'searchKey': userName[0].toUpperCase(),
     };
     Firestore.instance.collection('users').document(uid).setData(newUserData);
   }
