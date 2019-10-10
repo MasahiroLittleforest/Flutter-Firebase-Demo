@@ -88,6 +88,18 @@ class _SearchScreenState extends State<SearchScreen> {
     return _searchController.clear();
   }
 
+  String getHighlightedLetters(String originalString) {
+    String highlightedLetters =
+        originalString.substring(0, enteredKeywordLength);
+    return highlightedLetters;
+  }
+
+  String getNonHighlightedLetters(String originalString) {
+    String nonHighlightedLetters =
+        originalString.substring(enteredKeywordLength);
+    return nonHighlightedLetters;
+  }
+
   @override
   void initState() {
     getCurrentUserId().then((uid) {
@@ -128,7 +140,15 @@ class _SearchScreenState extends State<SearchScreen> {
       body: ListView.builder(
         itemCount: tempSearchStore.length,
         itemBuilder: (ctx, i) => ListTile(
-          title: Text(tempSearchStore[i]['userName']),
+          title: Row(
+            children: <Widget>[
+              Text(
+                getHighlightedLetters(tempSearchStore[i]['userName']),
+                style: const TextStyle(color: Colors.blue),
+              ),
+              Text(getNonHighlightedLetters(tempSearchStore[i]['userName'])),
+            ],
+          ),
         ),
       ),
     );
