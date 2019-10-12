@@ -13,6 +13,7 @@ class _SearchScreenState extends State<SearchScreen> {
   String _currentUserName;
   var queryResultSet = [];
   var tempSearchStore = [];
+  String enteredKeyword;
   int enteredKeywordLength = 0;
 
   Future<String> getCurrentUserId() async {
@@ -88,16 +89,85 @@ class _SearchScreenState extends State<SearchScreen> {
     return _searchController.clear();
   }
 
-  String getHighlightedLetters(String originalString) {
-    String highlightedLetters =
-        originalString.substring(0, enteredKeywordLength);
-    return highlightedLetters;
-  }
+  // String getHighlightedLetters(String originalString) {
+  //   String highlightedLetters =
+  //       originalString.substring(0, enteredKeywordLength);
+  //   return highlightedLetters;
+  // }
 
-  String getNonHighlightedLetters(String originalString) {
-    String nonHighlightedLetters =
-        originalString.substring(enteredKeywordLength);
-    return nonHighlightedLetters;
+  // String getNonHighlightedLetters(String originalString) {
+  //   String nonHighlightedLetters =
+  //       originalString.substring(enteredKeywordLength);
+  //   return nonHighlightedLetters;
+  // }
+
+  // // ハイライトされる文字列=入力値なのでそもそもこれはいらない？
+  // String getHighlightedString(String originalString, String inputString) {
+  //   int first = originalString.indexOf(inputString);
+  //   int last = originalString.indexOf(inputString[inputString.length - 1]);
+  //   String highlightedString = originalString.substring(first, last + 1);
+  //   return highlightedString;
+  // }
+
+  List<Widget> getHighlightedText(String originalString, String inputString) {
+    List<Widget> highlightedText;
+    final String lowerOriginalString = originalString.toLowerCase();
+    final String lowerInputString = inputString.toLowerCase();
+    final int firstOfInputString =
+        lowerOriginalString.indexOf(lowerInputString);
+    final int lastOfInputString = lowerOriginalString
+        .indexOf(lowerInputString[lowerInputString.length - 1]);
+    final int lastOfOriginalString = originalString.length - 1;
+
+    // inputStringと一致する箇所がない場合のエラー(Value not in range: -1)回避
+    if (firstOfInputString == -1) {
+      return [Container()];
+    }
+
+    // 頭から途中まで一致
+    if (firstOfInputString == 0 && lastOfInputString != lastOfOriginalString) {
+      highlightedText = [
+        Text(
+          originalString.substring(firstOfInputString, lastOfInputString + 1),
+          style: const TextStyle(color: Colors.blue),
+        ),
+        Text(
+          originalString.substring(lastOfInputString + 1),
+        ),
+      ];
+      // 真ん中で部分一致
+    } else if (firstOfInputString > 0 &&
+        lastOfInputString < lastOfOriginalString) {
+      highlightedText = [
+        Text(originalString.substring(0, firstOfInputString)),
+        Text(
+          originalString.substring(firstOfInputString, lastOfInputString + 1),
+          style: const TextStyle(color: Colors.blue),
+        ),
+        Text(originalString.substring(
+            lastOfInputString + 1, lastOfOriginalString)),
+      ];
+      // 途中から末尾まで一致
+    } else if (lastOfInputString == lastOfOriginalString) {
+      highlightedText = [
+        Text(originalString.substring(0, firstOfInputString)),
+        Text(
+          originalString.substring(firstOfInputString, lastOfInputString),
+          style: const TextStyle(
+            color: Colors.blue,
+          ),
+        ),
+      ];
+      // 完全一致
+    } else if (lowerOriginalString == lowerInputString) {
+      highlightedText = [
+        Text(
+          originalString,
+          style: const TextStyle(color: Colors.blue),
+        ),
+      ];
+    }
+    return highlightedText;
   }
 
   @override
@@ -128,6 +198,9 @@ class _SearchScreenState extends State<SearchScreen> {
           ),
           onChanged: (val) {
             initiateSearch(val);
+            setState(() {
+              enteredKeyword = val;
+            });
           },
         ),
         actions: <Widget>[
@@ -137,20 +210,26 @@ class _SearchScreenState extends State<SearchScreen> {
           )
         ],
       ),
-      body: ListView.builder(
-        itemCount: tempSearchStore.length,
-        itemBuilder: (ctx, i) => ListTile(
-          title: Row(
-            children: <Widget>[
-              Text(
-                getHighlightedLetters(tempSearchStore[i]['userName']),
-                style: const TextStyle(color: Colors.blue),
+      body: enteredKeywordLength >= 2 && tempSearchStore.length == 0
+          ? const Center(
+              child: Text('No user found.'),
+            )
+          : ListView.builder(
+              itemCount: tempSearchStore.length,
+              itemBuilder: (ctx, i) => ListTile(
+                title: Row(
+                  // children: <Widget>[
+                  //   Text(
+                  //     getHighlightedLetters(tempSearchStore[i]['userName']),
+                  //     style: const TextStyle(color: Colors.blue),
+                  //   ),
+                  //   Text(getNonHighlightedLetters(tempSearchStore[i]['userName'])),
+                  // ],
+                  children: getHighlightedText(
+                      tempSearchStore[i]['userName'], enteredKeyword),
+                ),
               ),
-              Text(getNonHighlightedLetters(tempSearchStore[i]['userName'])),
-            ],
-          ),
-        ),
-      ),
+            ),
     );
   }
 }
