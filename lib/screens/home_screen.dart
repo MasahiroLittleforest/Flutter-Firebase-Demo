@@ -2,9 +2,21 @@ import 'package:flutter/material.dart';
 
 import '../auth.dart';
 import './search_screen.dart';
+import '../firebase_cloud_messaging_handler.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
+  @override
+  _HomeScreenState createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
   final Auth _auth = Auth();
+
+  @override
+  void initState() {
+    FirebaseNotifications().setUpFirebase(context);
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {

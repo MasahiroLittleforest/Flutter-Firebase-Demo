@@ -15,6 +15,7 @@ class _SearchScreenState extends State<SearchScreen> {
   var tempSearchStore = [];
   String enteredKeyword;
   int enteredKeywordLength = 0;
+  final Firestore _firestore = Firestore.instance;
 
   Future<String> getCurrentUserId() async {
     FirebaseUser currentUser = await FirebaseAuth.instance.currentUser();
@@ -26,7 +27,7 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   Future<void> getCurrentUserName(String currentUserId) async {
-    Firestore.instance
+    _firestore
         .collection('users')
         .document(currentUserId)
         .get()
@@ -74,7 +75,7 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   Future<QuerySnapshot> searchByName(String searchField) async {
-    return await Firestore.instance
+    return await _firestore
         .collection('users')
         .where('searchKey',
             isEqualTo: searchField.substring(0, 1).toUpperCase())
@@ -89,25 +90,45 @@ class _SearchScreenState extends State<SearchScreen> {
     return _searchController.clear();
   }
 
-  // String getHighlightedLetters(String originalString) {
-  //   String highlightedLetters =
-  //       originalString.substring(0, enteredKeywordLength);
-  //   return highlightedLetters;
-  // }
+  void showAddFriendDialog(BuildContext context, otherUserData) {
+    showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: Text(otherUserData['userName']),
+            content: const Text('Add this user as a friend?'),
+            actions: <Widget>[
+              FlatButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text('Cancel'),
+              ),
+              FlatButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  addFriend(otherUserData);
+                },
+                child: const Text('OK'),
+              ),
+            ],
+          );
+        });
+  }
 
-  // String getNonHighlightedLetters(String originalString) {
-  //   String nonHighlightedLetters =
-  //       originalString.substring(enteredKeywordLength);
-  //   return nonHighlightedLetters;
-  // }
-
-  // // ハイライトされる文字列=入力値なのでそもそもこれはいらない？
-  // String getHighlightedString(String originalString, String inputString) {
-  //   int first = originalString.indexOf(inputString);
-  //   int last = originalString.indexOf(inputString[inputString.length - 1]);
-  //   String highlightedString = originalString.substring(first, last + 1);
-  //   return highlightedString;
-  // }
+  Future<void> addFriend(otherUserData) async {
+    final String otherUserId = otherUserData['uid'];
+    final friendData = {
+      'friendId': otherUserData['uid'],
+      'friendName': otherUserData['userName'],
+    };
+    _firestore
+        .collection('users')
+        .document(_currentUserId)
+        .collection('friends')
+        .document(otherUserId)
+        .setData(friendData);
+  }
 
   List<Widget> getHighlightedText(String originalString, String inputString) {
     List<Widget> highlightedText;
@@ -218,16 +239,12 @@ class _SearchScreenState extends State<SearchScreen> {
               itemCount: tempSearchStore.length,
               itemBuilder: (ctx, i) => ListTile(
                 title: Row(
-                  // children: <Widget>[
-                  //   Text(
-                  //     getHighlightedLetters(tempSearchStore[i]['userName']),
-                  //     style: const TextStyle(color: Colors.blue),
-                  //   ),
-                  //   Text(getNonHighlightedLetters(tempSearchStore[i]['userName'])),
-                  // ],
                   children: getHighlightedText(
                       tempSearchStore[i]['userName'], enteredKeyword),
                 ),
+                onTap: () {
+                  showAddFriendDialog(context, tempSearchStore[i]);
+                },
               ),
             ),
     );
