@@ -67,7 +67,7 @@ class _SearchScreenState extends State<SearchScreen> {
           });
         } else {
           setState(() {
-            tempSearchStore = [];
+            tempSearchStore.remove(element);
           });
         }
       });
