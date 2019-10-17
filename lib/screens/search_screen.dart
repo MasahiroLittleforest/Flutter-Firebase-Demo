@@ -131,63 +131,43 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   List<Widget> getHighlightedText(String originalString, String inputString) {
-    List<Widget> highlightedText;
     final String lowerOriginalString = originalString.toLowerCase();
     final String lowerInputString = inputString.toLowerCase();
     final int firstOfInputString =
         lowerOriginalString.indexOf(lowerInputString);
-    final int lastOfInputString = lowerOriginalString
-        .indexOf(lowerInputString[lowerInputString.length - 1]);
-    final int lastOfOriginalString = originalString.length - 1;
+    final int lastOfInputString =
+        lowerOriginalString.indexOf(lowerInputString) +
+            (lowerInputString.length - 1);
+    final double _fontSize = 24.0;
+    final Color _highlightColor = Colors.blue;
 
     // inputStringと一致する箇所がない場合のエラー(Value not in range: -1)回避
-    if (firstOfInputString == -1) {
+    if (firstOfInputString == -1 || lastOfInputString == -1) {
       return [Container()];
     }
 
-    // 頭から途中まで一致
-    if (firstOfInputString == 0 && lastOfInputString != lastOfOriginalString) {
-      highlightedText = [
-        Text(
-          originalString.substring(firstOfInputString, lastOfInputString + 1),
-          style: const TextStyle(color: Colors.blue),
+    final List<Widget> highlightedText = [
+      Text(
+        originalString.substring(0, firstOfInputString),
+        style: TextStyle(
+          fontSize: _fontSize,
         ),
-        Text(
-          originalString.substring(lastOfInputString + 1),
+      ),
+      Text(
+        originalString.substring(firstOfInputString, lastOfInputString + 1),
+        style: TextStyle(
+          color: _highlightColor,
+          fontSize: _fontSize,
         ),
-      ];
-      // 真ん中で部分一致
-    } else if (firstOfInputString > 0 &&
-        lastOfInputString < lastOfOriginalString) {
-      highlightedText = [
-        Text(originalString.substring(0, firstOfInputString)),
-        Text(
-          originalString.substring(firstOfInputString, lastOfInputString + 1),
-          style: const TextStyle(color: Colors.blue),
+      ),
+      Text(
+        originalString.substring(lastOfInputString + 1),
+        style: TextStyle(
+          fontSize: _fontSize,
         ),
-        Text(originalString.substring(
-            lastOfInputString + 1, lastOfOriginalString)),
-      ];
-      // 途中から末尾まで一致
-    } else if (lastOfInputString == lastOfOriginalString) {
-      highlightedText = [
-        Text(originalString.substring(0, firstOfInputString)),
-        Text(
-          originalString.substring(firstOfInputString, lastOfInputString),
-          style: const TextStyle(
-            color: Colors.blue,
-          ),
-        ),
-      ];
-      // 完全一致
-    } else if (lowerOriginalString == lowerInputString) {
-      highlightedText = [
-        Text(
-          originalString,
-          style: const TextStyle(color: Colors.blue),
-        ),
-      ];
-    }
+      ),
+    ];
+
     return highlightedText;
   }
 
@@ -218,10 +198,10 @@ class _SearchScreenState extends State<SearchScreen> {
             hintText: 'User name',
           ),
           onChanged: (val) {
-            initiateSearch(val);
             setState(() {
               enteredKeyword = val;
             });
+            initiateSearch(val);
           },
         ),
         actions: <Widget>[
